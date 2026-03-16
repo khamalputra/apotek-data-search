@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pencarian Data Apotik</title>
+    
+    <!-- Menggunakan Tailwind CSS via CDN untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS untuk styling umum */
+        body { margin: 0; padding: 0; }
+        
+        /* Animasi sederhana untuk hasil pencarian */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans text-gray-800">
+
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden z-10">
+        
+        <!-- Bagian Header -->
+        <div class="bg-blue-600 px-6 py-8 text-white text-center">
+            <h1 class="text-2xl font-bold mb-2">Pencarian Data Apotik</h1>
+            <p class="text-blue-100 text-sm">Masukkan Order ID untuk melihat detail Apotik dan No. Telepon</p>
+        </div>
+
+        <div class="p-6">
+            <!-- Form Pencarian -->
+            <form id="searchForm" class="mb-6">
+                <div class="relative">
+                    <input
+                        type="text"
+                        id="orderIdInput"
+                        placeholder="Contoh: ORD-12345"
+                        class="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                        required="required"
+                    />
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors disabled:bg-blue-300 flex items-center justify-center min-w-[40px]"
+                    >
+                        <!-- Ikon Pencarian SVG -->
+                        <svg id="iconSearch" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        
+                        <!-- Ikon Loading SVG -->
+                        <svg id="iconLoading" class="hidden animate-spin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="2" x2="12" y2="6"></line>
+                            <line x1="12" y1="18" x2="12" y2="22"></line>
+                            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                            <line x1="2" y1="12" x2="6" y2="12"></line>
+                            <line x1="18" y1="12" x2="22" y2="12"></line>
+                            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                            <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Kotak Pesan Error -->
+            <div id="errorContainer" class="hidden mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-red-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p id="errorText" class="text-sm"></p>
+            </div>
+
+            <!-- Kotak Hasil Pencarian -->
+            <div id="resultContainer" class="hidden bg-gray-50 border border-gray-100 rounded-xl p-5 space-y-4 animate-fade-in">
+                
+                <!-- Nama Customer Section -->
+                <div class="flex items-start gap-4">
+                    <div class="bg-purple-100 p-2.5 rounded-lg text-purple-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Nama Customer</p>
+                        <p id="resultNamaCustomer" class="text-gray-900 font-semibold text-lg">-</p>
+                    </div>
+                </div>
+
+                <div class="w-full h-px bg-gray-200"></div>
+
+                <!-- Apotik Section -->
+                <div class="flex items-start gap-4">
+                    <div class="bg-blue-100 p-2.5 rounded-lg text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+                            <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                            <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+                            <path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Nama Apotik</p>
+                        <p id="resultApotik" class="text-gray-900 font-semibold text-lg">-</p>
+                    </div>
+                </div>
+                
+                <div class="w-full h-px bg-gray-200"></div>
+
+                <!-- Telepon Section -->
+                <div class="flex items-start gap-4">
+                    <div class="bg-green-100 p-2.5 rounded-lg text-green-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Nomor Telepon</p>
+                        <p id="resultNoTelp" class="text-gray-900 font-semibold text-lg">-</p>
+                        
+                        <!-- Link WhatsApp -->
+                        <a 
+                            id="whatsappLink"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hidden inline-block mt-2 text-sm text-green-600 hover:text-green-700 font-medium hover:underline"
+                        >
+                            Hubungi via WhatsApp →
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi Google Sheet
+        const SHEET_ID = '1xtsttmDt2dz4Sv_SAMhBpbewgUbC6L3iK1qSuprWVEU';
+        const SHEET_NAME = 'data';
+
+        // Mengambil elemen-elemen HTML
+        const searchForm = document.getElementById('searchForm');
+        const orderIdInput = document.getElementById('orderIdInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const iconSearch = document.getElementById('iconSearch');
+        const iconLoading = document.getElementById('iconLoading');
+        
+        const errorContainer = document.getElementById('errorContainer');
+        const errorText = document.getElementById('errorText');
+        
+        const resultContainer = document.getElementById('resultContainer');
+        const resultNamaCustomer = document.getElementById('resultNamaCustomer');
+        const resultApotik = document.getElementById('resultApotik');
+        const resultNoTelp = document.getElementById('resultNoTelp');
+        const whatsappLink = document.getElementById('whatsappLink');
+
+        // Fungsi memisahkan Nama dan No Telp dari teks seperti "Cicieh082165585022"
+        function splitNameAndPhone(combinedText) {
+            if (!combinedText) return { name: '-', phone: '-' };
+            
+            // Mencari indeks pertama di mana angka dimulai
+            const match = combinedText.match(/\d/);
+            if (!match) return { name: combinedText, phone: '-' };
+            
+            const index = match.index;
+            const name = combinedText.substring(0, index).trim();
+            const phone = combinedText.substring(index).trim();
+            
+            return { 
+                name: name || '-', 
+                phone: phone || '-' 
+            };
+        }
+
+        // Format nomor untuk link WhatsApp
+        function formatWhatsAppLink(phone) {
+            let cleanPhone = String(phone).replace(/\D/g, '');
+            if (cleanPhone.startsWith('0')) {
+                cleanPhone = '62' + cleanPhone.substring(1);
+            }
+            return `https://wa.me/` + cleanPhone;
+        }
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            orderIdInput.disabled = isLoading;
+            if (isLoading) {
+                iconSearch.classList.add('hidden');
+                iconLoading.classList.remove('hidden');
+                errorContainer.classList.add('hidden');
+                resultContainer.classList.add('hidden');
+            } else {
+                iconSearch.classList.remove('hidden');
+                iconLoading.classList.add('hidden');
+            }
+        }
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorContainer.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+        }
+
+        function showResult(nama, apotik, noTelp) {
+            resultNamaCustomer.textContent = nama;
+            resultApotik.textContent = apotik;
+            resultNoTelp.textContent = noTelp;
+            
+            if (noTelp && !noTelp.toLowerCase().includes('kosong') && noTelp.trim() !== '-' && noTelp.trim() !== '') {
+                whatsappLink.href = formatWhatsAppLink(noTelp);
+                whatsappLink.classList.remove('hidden');
+            } else {
+                whatsappLink.classList.add('hidden');
+            }
+
+            resultContainer.classList.remove('hidden');
+            errorContainer.classList.add('hidden');
+        }
+
+        searchForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const orderId = orderIdInput.value.trim();
+            if (!orderId) return;
+
+            setLoading(true);
+
+            try {
+                // Gunakan & biasa (bukan &amp;) untuk deploy di platform web standar/Vercel
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+                
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
+                
+                if (!match) {
+                    throw new Error('Gagal membaca data. Pastikan akses link Spreadsheet disetel ke "Siapa saja yang memiliki link".');
+                }
+
+                const data = JSON.parse(match[1]);
+                const rows = data.table.rows;
+                let found = false;
+
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || !row.c || !row.c[0]) continue; 
+                    
+                    const currentOrderId = String(row.c[0].v).trim();
+                    
+                    if (currentOrderId === orderId) {
+                        const apotik = row.c[2] && row.c[2].v ? row.c[2].v : 'Data Apotik Kosong';
+                        const rawTelpData = row.c[6] && row.c[6].v ? String(row.c[6].v) : '';
+                        
+                        // Memisahkan nama dan nomor
+                        const { name, phone } = splitNameAndPhone(rawTelpData);
+
+                        showResult(name, apotik, phone);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    showError(`Order ID "${orderId}" tidak ditemukan.`);
+                }
+
+            } catch (err) {
+                showError(err.message || 'Terjadi kesalahan saat mengambil data.');
+            } finally {
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>
