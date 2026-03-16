@@ -7,6 +7,21 @@
     
     <!-- Menggunakan Tailwind CSS via CDN untuk styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#E2004E',
+                            dark: '#c10042',
+                            light: '#fff0f5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         /* CSS untuk styling umum */
         body { margin: 0; padding: 0; }
@@ -28,10 +43,10 @@
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden z-10">
         
-        <!-- Bagian Header -->
-        <div class="bg-blue-600 px-6 py-8 text-white text-center">
+        <!-- Bagian Header dengan warna #E2004E -->
+        <div class="bg-brand px-6 py-8 text-white text-center">
             <h1 class="text-2xl font-bold mb-2">Pencarian Data Apotik</h1>
-            <p class="text-blue-100 text-sm">Masukkan Order ID untuk melihat detail Apotik dan No. Telepon</p>
+            <p class="text-white/80 text-sm">Masukkan Order ID untuk melihat detail Apotik dan No. Telepon</p>
         </div>
 
         <div class="p-6">
@@ -42,21 +57,21 @@
                         type="text"
                         id="orderIdInput"
                         placeholder="Contoh: ORD-12345"
-                        class="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                        class="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all shadow-sm"
                         required="required"
                     />
                     <button
                         type="submit"
                         id="submitBtn"
-                        class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors disabled:bg-blue-300 flex items-center justify-center min-w-[40px]"
+                        class="absolute right-2 top-2 bottom-2 bg-brand hover:bg-brand-dark text-white p-2 rounded-lg transition-colors disabled:bg-red-300 flex items-center justify-center min-w-[40px]"
                     >
-                        <!-- Ikon Pencarian SVG -->
+                        <!-- Ikon Pencarian -->
                         <svg id="iconSearch" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                         
-                        <!-- Ikon Loading SVG -->
+                        <!-- Ikon Loading -->
                         <svg id="iconLoading" class="hidden animate-spin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="2" x2="12" y2="6"></line>
                             <line x1="12" y1="18" x2="12" y2="22"></line>
@@ -86,7 +101,7 @@
                 
                 <!-- Nama Customer Section -->
                 <div class="flex items-start gap-4">
-                    <div class="bg-purple-100 p-2.5 rounded-lg text-purple-600">
+                    <div class="bg-brand-light p-2.5 rounded-lg text-brand">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
@@ -102,7 +117,7 @@
 
                 <!-- Apotik Section -->
                 <div class="flex items-start gap-4">
-                    <div class="bg-blue-100 p-2.5 rounded-lg text-blue-600">
+                    <div class="bg-brand-light p-2.5 rounded-lg text-brand">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
                             <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
@@ -151,7 +166,6 @@
         const SHEET_ID = '1xtsttmDt2dz4Sv_SAMhBpbewgUbC6L3iK1qSuprWVEU';
         const SHEET_NAME = 'data';
 
-        // Mengambil elemen-elemen HTML
         const searchForm = document.getElementById('searchForm');
         const orderIdInput = document.getElementById('orderIdInput');
         const submitBtn = document.getElementById('submitBtn');
@@ -167,25 +181,16 @@
         const resultNoTelp = document.getElementById('resultNoTelp');
         const whatsappLink = document.getElementById('whatsappLink');
 
-        // Fungsi memisahkan Nama dan No Telp dari teks seperti "Cicieh082165585022"
         function splitNameAndPhone(combinedText) {
             if (!combinedText) return { name: '-', phone: '-' };
-            
-            // Mencari indeks pertama di mana angka dimulai
             const match = combinedText.match(/\d/);
             if (!match) return { name: combinedText, phone: '-' };
-            
             const index = match.index;
             const name = combinedText.substring(0, index).trim();
             const phone = combinedText.substring(index).trim();
-            
-            return { 
-                name: name || '-', 
-                phone: phone || '-' 
-            };
+            return { name: name || '-', phone: phone || '-' };
         }
 
-        // Format nomor untuk link WhatsApp
         function formatWhatsAppLink(phone) {
             let cleanPhone = String(phone).replace(/\D/g, '');
             if (cleanPhone.startsWith('0')) {
@@ -238,7 +243,6 @@
             setLoading(true);
 
             try {
-                // Gunakan & biasa (bukan &amp;) untuk deploy di platform web standar/Vercel
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
                 
                 const response = await fetch(url);
@@ -246,9 +250,7 @@
                 
                 const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
                 
-                if (!match) {
-                    throw new Error('Gagal membaca data. Pastikan akses link Spreadsheet disetel ke "Siapa saja yang memiliki link".');
-                }
+                if (!match) throw new Error('Gagal membaca data Spreadsheet.');
 
                 const data = JSON.parse(match[1]);
                 const rows = data.table.rows;
@@ -258,13 +260,9 @@
                     const row = rows[i];
                     if (!row || !row.c || !row.c[0]) continue; 
                     
-                    const currentOrderId = String(row.c[0].v).trim();
-                    
-                    if (currentOrderId === orderId) {
+                    if (String(row.c[0].v).trim() === orderId) {
                         const apotik = row.c[2] && row.c[2].v ? row.c[2].v : 'Data Apotik Kosong';
                         const rawTelpData = row.c[6] && row.c[6].v ? String(row.c[6].v) : '';
-                        
-                        // Memisahkan nama dan nomor
                         const { name, phone } = splitNameAndPhone(rawTelpData);
 
                         showResult(name, apotik, phone);
@@ -273,12 +271,10 @@
                     }
                 }
 
-                if (!found) {
-                    showError(`Order ID "${orderId}" tidak ditemukan.`);
-                }
+                if (!found) showError(`Order ID "${orderId}" tidak ditemukan.`);
 
             } catch (err) {
-                showError(err.message || 'Terjadi kesalahan saat mengambil data.');
+                showError('Terjadi kesalahan saat mengambil data.');
             } finally {
                 setLoading(false);
             }
